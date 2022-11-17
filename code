@@ -1,0 +1,118 @@
+private static void SuggestWords(string choice, List<string> allowedWords)
+{
+    PriorityQueue suggestions = new PriorityQueue(allowedWords, choice);
+    Console.WriteLine("did you mean?");
+    suggestions.DisplayWords();
+}
+        
+class PriorityQueue
+{
+string[] suggestions = new string[3];
+int[] currPriorities = { 0, 0, 0 };
+string choice;
+
+public PriorityQueue(List<string> allowedWords, string Choice)
+{
+    choice = Choice;
+    PopulateSuggestions(allowedWords);
+    for (int i = 3; i < allowedWords.Count; i++)
+    {
+        AddToQueue(allowedWords[i], allowedWords);
+    }
+}
+private void PopulateSuggestions(List<string> allowedWords)
+{
+    int i = 0;
+    int bound = 3;
+    while (i < bound)
+    {
+        if (Program.CheckWordIsValid(allowedWords[i], allowedWords))
+        {
+            suggestions[i] = allowedWords[i];
+            currPriorities[i] = GetEditDist(choice, allowedWords[i]);
+            i++;
+        }
+        else
+        {
+            bound++;
+            i++;
+        }
+    }
+    sortQueue();
+}
+public bool IsSmaller(int editDist)
+{
+    if (editDist < currPriorities[0])
+    {
+        return true;
+    }
+    return false;
+}
+public void DisplayWords()
+{
+    foreach (string s in suggestions)
+    {
+        Console.WriteLine(s);
+    }
+}
+public int GetSuggestionsLength()
+{
+    return suggestions.Length;
+}
+public void AddToQueue(string currString, List<string> allowedWords)
+{
+    int editDist = GetEditDist(choice, currString);
+    if (IsSmaller(editDist) && Program.CheckWordIsValid(currString, allowedWords))
+    {
+        currPriorities[0] = editDist;
+        suggestions[0] = currString;
+        sortQueue();
+    }
+}
+public void sortQueue()
+{
+    for (int i = 0; i < currPriorities.Length - 1; i++)
+    {
+        for (int j = 0; j < currPriorities.Length - 1; j++)
+        {
+            if (currPriorities[j] < currPriorities[j + 1])
+            {
+                string temp = suggestions[j];
+                suggestions[j] = suggestions[j + 1];
+                suggestions[j + 1] = temp;
+                int tempInt = currPriorities[j];
+                currPriorities[j] = currPriorities[j + 1];
+                currPriorities[j + 1] = tempInt;
+            }
+        }
+    }
+}
+public int GetEditDist(string word1, string word2)
+{
+    int[,] mat = new int[word1.Length + 1, word2.Length + 1];
+    for (int i = 0; i <= word1.Length; i++)
+    {
+        mat[i, 0] = i;
+    }
+    for (int i = 0; i <= word2.Length; i++)
+    {
+        mat[0, i] = i;
+    }
+    for (int i = 1; i <= word1.Length; i++)
+    {
+        for (int j = 1; j <= word2.Length; j++)
+        {
+            if (word1[i - 1] == word2[j - 1])
+            {
+                mat[i, j] = mat[i - 1, j - 1];
+            }
+            else
+            {
+                mat[i, j] = mat[i - 1, j - 1] + 1;
+            }
+        }
+    }
+    int answer = mat[word1.Length, word2.Length];
+    return answer;
+}
+}
